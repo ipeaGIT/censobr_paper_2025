@@ -1,0 +1,4 @@
+name|type|data|command|depend|seed|path|time|size|bytes|format|repository|iteration|parent|children|seconds|warnings|error
+.Random.seed|object|f9d0b122b86ca212|||||||||||||||
+rendered_report|stem|87ddc78639660c8c|b6918a952d5650e4|392dcecfa7416301|-786482954|R:/Dropbox/git/censobr_2025/paper_pdf/censobr_shortPaper.pdf|t20041.7181007421s|36c6775bc73fc67d|1669292|file|local|vector|||211.61||
+report_file|stem|0f0b0160ca2ed747|44f330ebf3287894|2c530c1562a7fbd1|97616872|R/censobr_shortPaper.Rmd|t20041.6295730422s|e427281182b4da83|39366|file|local|vector|||0||
