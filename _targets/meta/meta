@@ -1,4 +1,4 @@
 name|type|data|command|depend|seed|path|time|size|bytes|format|repository|iteration|parent|children|seconds|warnings|error
-.Random.seed|object|c11eef9e1512f27f|||||||||||||||
-rendered_report|stem|ee407f8a88a1aad9|134f2f30cb2ffb2a|c63033fd86e8694d|-786482954|R:/Dropbox/git/censobr_paper_2025/paper_pdf/censobr_shortPaper.pdf*R:/Dropbox/git/censobr_paper_2025/paper_pdf/censobr_shortPaper.docx|t20048.0769762135s|c79ceaf8468122d5|1846604|file|local|vector|||399.92||
-report_file|stem|42dc12c3497883c5|31816d827ca534f8|2c530c1562a7fbd1|97616872|censobr_shortPaper.Rmd|t20048.0721817048s|2bbf0721e46b8129|40692|file|local|vector|||0||
+.Random.seed|object|5cbf003f937666a9|||||||||||||||
+rendered_report|stem|ee407f8a88a1aad9|134f2f30cb2ffb2a|2b61bbff9486d012|-786482954|R:/Dropbox/git/censobr_paper_2025/paper_pdf/censobr_shortPaper.pdf*R:/Dropbox/git/censobr_paper_2025/paper_pdf/censobr_shortPaper.docx|t20048.0769762135s||1846604|file|local|vector|||376.56|pdflatex not found|LaTeX failed to compile C1_Artigoscensobr_paper_2025paper_pdfcensobr_shortPaper.tex. See httpsyihui.orgtinytexrdebugging for debugging tips.
+report_file|stem|8091a279966bd382|31816d827ca534f8|2c530c1562a7fbd1|97616872|censobr_shortPaper.Rmd|t20048.572158555s|9e8b51f60930b9ec|40693|file|local|vector|||0||
