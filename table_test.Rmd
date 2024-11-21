@@ -1,0 +1,56 @@
+---
+title: '`{censobr}`: Easy Access to Brazilian Population Census Data'
+author:
+- Rafael H. M. Pereira, IPEA
+- Rogério Jerônimo Barbosa, IESP/UERJ
+date: "`r Sys.Date()`"
+bibliography: references.bib
+output:
+  pdf_document: default
+  word_document: default
+  html_document:
+    df_print: paged
+---
+
+
+
+**Table 1. Core data function in the {censobr} package.**
+
+| Function           | Description                                | Availability |
+|--------------------|--------------------------------------------|--------------|
+| `read_population()`| Download microdata of population records   |1960, 1970, 1980, 1991, 2000, 2010 (*soon* for 2022)|
+|                    |                                            |              |
+| `read_households()`| Download microdata of household records    |1960, 1970, 1980, 1991, 2000, 2010 (*soon* for 2022)|
+|                    |                                            |              |
+| `read_mortality()` | Download microdata of death records        |2010 (*soon* for 2022)|
+|                    |                                            |              |
+| `read_emigration()`| Download microdata of emigration records   |2010 (*soon* for 2022)|
+|                    |                                            |              |
+| `read_families()`  | Download microdata of family records       | 2000 |
+|                    |                                            |              |
+| `read_tracts()`    | Download census tract-level aggregated data|2010 (*soon* for 2000 and 2022)|
+
+
+**Table 2. Core data function in the {censobr} package.**
+
+| Function            | Description          | Availability                                           |
+|---------------------|----------------------|--------------------------------------------------------|
+| `data_dictionary()` | Download data dictionary (code book)  | Microdata: 1960, 1970, 1980, 1991, 2000, 2010 (*soon* for 2022)|
+|                     |                      |                                                        |
+|                     |                      | Tract-level aggregates: 2000, 2010 (*soon* for 2022)   |
+|                     |                      |                                                        |
+|                     |                      |                                                        |
+| `questionnaire()`   | Download questionnaires used in data collection       | 1960, 1970, 1980, 1991, 2000, 2010, 2022|
+|                     |                      |                                                        |
+| `interview_manual()`| Download interview manual (guidebook) for surveyors | 1960, 1970, 1980, 1991, 2000, 2010, 2022|
+
+
+
+
+**Table 3. Core data function in the {censobr} package.**
+
+| Function                 | Description                                                | Availability |
+|--------------------------|------------------------------------------------------------|--------------|
+| `censobr_cache()`        | Manage cached files from the censobr package               |              |
+| `set_censobr_cache_dir()`| Set a custom cache directory for censobr files             |              |
+

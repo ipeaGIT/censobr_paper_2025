@@ -22,7 +22,7 @@ tar_option_set(packages = c("rmarkdown"))
 list(
   tar_target(
     name = report_file, 
-    command = "R/censobr_shortPaper.Rmd", 
+    command = "censobr_shortPaper.Rmd", 
     format = "file"
   ),
   
@@ -31,6 +31,7 @@ list(
     {
       # Render the R Markdown file
       rmarkdown::render(report_file,
+                        output_format = c("pdf_document", "word_document"),
                         output_dir = "paper_pdf")
     },
     format = "file"
