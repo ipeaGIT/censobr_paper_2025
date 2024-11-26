@@ -24,16 +24,13 @@ This paper introduces the `{censobr}` package, outlines its core functionalities
 
 The first census of Brazil was conducted in 1872, during Brazil's imperial period, while modern censuses began in 1940 under the coordination of the Brazilian Institute of Geography and Statistics (IBGE) [@ibge1990estatisticas]. Given the size of the country in terms of both population and territory, the Brazilian population census represents one of the most extensive population data collection initiatives worldwide.
 
-Since 1960, each Brazilian census is divided into two main components: the **universe survey** and the **sample survey** (similar to census data collection in other countries like the United States and ..... ). The universal survey is administered to all households and collects essential demographic and housing information through a short questionnaire containing between 9 and 30 questions, depending on the census edition. In contrast, the sample survey targets a representative subset of the population and uses a longer questionnaire that includes all questions from the universe components as well as dozens of more detailed questions on topics such as migration, religion, education, fertility, income, and employment. The sample size was 25% in the 1960, 1970, and 1980 censuses, and it was reduced to 10% from 1991 onwards (REF).
+Since 1960, each Brazilian census is divided into two main components: the **universe survey** and the **sample survey** (similar to what was previously done in the United States and the UK, and is still in use in Canada). The universal survey is administered to all households and collects essential demographic and housing information through a short questionnaire containing between 9 and 30 questions, depending on the census edition. In contrast, the sample survey targets a representative subset of the population and uses a longer questionnaire that includes all questions from the universe components as well as dozens of more detailed questions on topics such as migration, religion, education, fertility, income, and employment. The sample size was 25% in the 1960, 1970, and 1980 censuses, and it was reduced to 10% from 1991 onwards [cf. @ibge1990estatisticas].
 
 Brazilian population census data is published in two main formats: aggregated data at the census tract level, and microdata at the person or household level. **Aggregated data** from the universe survey (short questionnaire) provide summary statistics (counts, proportions, and means) computed at the census tract level. This data set can be used for example for spatial analysis to examine spatial patterns, disparities and trends of various characteristics of the population [e.g. @brueckner2019slums; @goto2022spatial]. **Census tracts** are the smallest geographic unit in the censuses. They are contiguous areas typically containing about 200 households, designed to facilitate efficient enumeration and data collection. Over time, the number of census tracts has expanded in response to population growth and changes in settlement patterns, with approximately 216,000 census tracts in 2000, 314,000 in 2010, and 452,000 in 2022. These tracts form the fundamental spatial units for census data collection, reflecting the evolution of Brazilian urban and rural landscapes. Individual-level data from the universe survey is not publicly available due to privacy concerns.
 
 Meanwhile, the **microdata** from the sample survey (long questionnaire) consist of a dataset in which each row represents an instance of data collection. In IBGE surveys and censuses, "persons" and "households" are tipically the units of analysis of microdata. "Persons" refer to individual members of the population, and their data typically includes personal characteristics such as age, gender, education, etc. "Households" represent residential units, which consist of one or more persons living together, sharing living expenses, and typically occupying a single housing unit. Household-level microdata include variables related to housing conditions, access to services (such as water and sanitation) and household composition (such as the number of residents and their relationships). Because the sample survey is more sparse geographically, it does not allow for fine-grained spatial analyses. The smallest geographic units available in the microdata are **weighting areas** (áreas de ponderação), which are groups of contiguous census tracts ensuring statistical representativeness. For the 2010 Census, IBGE established that a weighting area should have at least 400 occupied households in the sample. In less densely populated regions, these areas cover a large territorial extension.
 
 In summary, there is a trade-off of spatial granularity and richness of information between the the universe and the sample survey components of the Brazilian census. While aggregated data at the census tract level allows for fine grained spatial, it covers relatively few variables. By contrast, the  microdata from the sample survey covers many more variables that allow for detailed individual- and household-level analysis, but at a coarser geographical level.
-
-6666666666666666666666666666
-~~By using **sampling weights** included in the sample microdata, users can generate population estimates that accurately reflect the Brazilian entire population. As the sample was not produced using Simple Random Sampling (SRS), statistical inference requires accounting for the complex sampling design used in the census, which affects variance estimates and confidence interval calculations.~~
 
 ```{r, warning=F, message=F, echo=FALSE}
 library(geobr)
@@ -92,14 +89,13 @@ temp1  <- ggplot() +
            hjust = 0, color=clr, size=sz) +
   coord_sf(xlim = c(-116.305, -115.98)) +
   theme_void() +
-  theme(plot.background = element_rect(fill = 'white', color='white'))
+  theme(plot.background = element_rect(fill = 'white', color='white')) +
+  labs(title = 'Spatial resolution hierarchy of the Brazilian Censuses')
 
 temp1
 ```
 
-
-
-
+The figure above illustrates the spatial resolution hierarchy of the Brazilian Demographic Census, ranging from municipality-level aggregation to census tract and weighting area levels. Census tracts, the smallest geographic unit, are used to collect comprehensive demographic data and offer a high-resolution snapshot of local characteristics. In contrast, weighting areas combine contiguous census tracts to ensure statistical representativeness while allowing for more detailed analyses of microdata variables.
 
 ## 3. Installation and Core Data Functions
 
@@ -290,7 +286,7 @@ pop_1970 <- read_population(year = 1970)
 pop_2010 <- read_population(year = 2010)
 ```
 
-Then we recode the raw data (still as Arrow tables), collect, and count the number of men and women by age to organize the dataset in a suitable format to create the pyramids figure.
+Then we recode the raw data (still as Arrow tables), collect, and count the number of men and women by age to organize the dataset in a suitable format to create the pyramids figure. As these are sample microdata, it is necessary to make use of **sampling weights** (variable V054 in the 1970 Census and V0010 in the 2010 edition). 
 
 ```{r, message=FALSE, warning=FALSE}
 # Summarize age distribution
@@ -400,7 +396,7 @@ sanitation_summary |>
     x = "Sanitation Access",
     y = "Number of Households (in thousands)"
   ) +
-  scale_fill_manual(values = c("#00AFBB", "#E7B800")) +
+  scale_fill_manual(values = c("#437297", "#ffcb69")) +
   theme_minimal() +
         theme(legend.position = "bottom")
 ```
@@ -409,7 +405,7 @@ sanitation_summary |>
 
 As we explained above, the 1960 Census microdata provided by `{censobr}` is an integration of two distinct datasets: a comprehensive 25% sample survey and a 1.27% probabilistic sub-sample. The dataset provide the variables for incorporating the Complex Sample Design with stratification, clustering, and weighting. Stratification ensures that different population groups are represented with certainty, while clustering addresses the correlation among observations within the same sampling units. Sampling weights, by their turn, corrects for disproportions and incorporates an expansion factor, making the counts sum up to the population totals.
 
-In this section, we illustrate how to use data from the states of Rio de Janeiro and Guanabara (which nowadays is the city of Rio de Janeiro) to construct a survey design object. We then estimate the distribution of the population across urban, suburban, and rural areas and calculate the confidence intervals. We start by downloading and recoding the data:
+In this section, we illustrate how to use data from the states of Rio de Janeiro and Guanabara (which nowadays is the city of Rio de Janeiro) to construct a survey design object. We estimate the distribution of the population served by different forms of water supply: the official General Network vs. other forms (well, spring, etc.) Then we calculate the confidence intervals. First it is necessary to download and recode the data:
 
 ```{r, message=F, warning=FALSE}
 # Load household data for 1960
@@ -417,15 +413,17 @@ census_1960 = read_population(year = 1960)
 
 # Filtering cases, selecting and recoding varibles
 census_rj_gb = census_1960 |>
-        select(uf, Urban = V118, 
+        select(uf, Water = V105, 
                censobr_upa, censobr_usa, censobr_estrato, censobr_weight, 
                censobr_source) |>
-        filter(uf %in% c(52, 54)) |>
+        filter(uf %in% c(52, 54),
+               !is.na(Water)) |>
         collect() |>
         mutate(uf    = ifelse(uf == 52, "Rio de Janeiro", "Guanabara"),
-               urban = factor(Urban, 
-                              levels = c(1,3, 5),
-                              labels = c("Urban", "Suburban", "Rural"), 
+               Water = ifelse(Water %in% c(0, 9), 1, 0),
+               Water = factor(Water, 
+                              levels = c(0, 1),
+                              labels = c("Other Forms", "General Public Network"), 
                               ordered = T))
 
 # Weighted (N) and unweighted cases (n)
@@ -457,24 +455,24 @@ By using a simple dplyr-like syntax, we can produce a contingency table with the
 
 ```{r, warning=F, message=FALSE}
 # Using dplyr-like syntax to manipulate the survey object
-urban_table <- census_rj_gb_svy |>
+water_table <- census_rj_gb_svy |>
         mutate(one = 1) |>
-        group_by(uf, urban) |>
+        group_by(uf, Water) |>
         summarize(pct = survey_mean(vartype = "ci"),
                   n = unweighted(n()))
 
 # Plotting the results
-ggplot(data = urban_table,
-       aes(x = urban, 
+ggplot(data = water_table,
+       aes(x = uf, 
            y = pct, 
-           fill = uf,
+           fill = Water,
            ymax = pct_upp, 
            ymin = pct_low)) +
   geom_bar(stat = "identity", position = "dodge") +
   geom_errorbar(position = position_dodge(width = 0.9), width = 0.1) +
-  scale_fill_manual(values = c("#00AFBB", "#E7B800")) +
+  scale_fill_manual(values = c("#437297", "#ffcb69")) +
   labs(
-          title = "Population living in Urban, Suburban, and Rural areas (1960)",
+          title = "Population by forms of Water Supply (1960)",
           subtitle = "Guababana (Rio de Janeiro City) and Rio de Janeiro State",
           x = "Areas",
           y = "Proportion") +
@@ -513,7 +511,7 @@ This organization of data aggregated by census tracts may seem confusing at firs
 
 In this example, we create a map of the spatial distribution of average per capita income. Information on the total number of residents in each census tract is available in the "Basico" block variable set, in the variable "V002". The information on total income for the census tract can be found in the "DomicilioRenda" block, in the variable "V003".
 
-Using the code below, we can download the data and calculate the per capita income of all census tracts in Brazil. We will later filter these results to include only the tracts in Belo Horizonte.
+Using the code below, we can download the data and calculate the per capita income of all census tracts in Brazil. We will later filter these results to include only the tracts of the municipality of Sao Paulo.
 
 ```{r, warning=F, message=FALSE}
 # download the data
@@ -536,38 +534,37 @@ tracts_df10 <- tracts_df10 |>
                 collect()
 ```
 
-The next step is to download the geometries of Belo Horizonte census tracts for 2010 using the `read_census_tract()` function from the `{geobr}` package. Here, we pass the parameter `code_tract = "MG"` to download all tracts in the state of Minas Gerais and then filter only for the municipality of Belo Horizonte.
+The next step is to download the geometries of census tracts for 2010 using the `read_census_tract()` function from the `{geobr}` package. Here, we pass the parameter `code_tract = "SP"` to download all tracts in the state of Sao Paulo and then filter only for its capital, the municipality of Sao Paulo.
 
 ```{r, warning=F, message=FALSE}
 library(geobr)
 
-# download Belo Horizonte municipality
-muni_bh <- read_municipality(code_muni = 3106200,
+# download Sao Paulo municipality
+muni_sp <- read_municipality(code_muni = 3550308,
                              year = 2010)
 
 # download all tracts in Minas Gerais
-tracts_2010 <- geobr::read_census_tract(code_tract = "MG",
+tracts_2010 <- geobr::read_census_tract(code_tract = "SP",
                                         year = 2010,
                                         simplified = FALSE,
                                         showProgress = FALSE)
 
-# filter tracts in Belo Horizonte
-tracts_2010 <- filter(tracts_2010, name_muni == 'Belo Horizonte')
+# filter tracts in Sao Paulo
+tracts_2010 <- filter(tracts_2010, code_muni == 3550308)
 ```
 
 Finally, we can merge the spatial data with the income data of the census tracts using the key variable `code_tract` and create a map of the spatial distribution of per capita income in the municipality.
 
 ```{r, warning=F, message=FALSE}
-bh_tracts <- left_join(tracts_2010, tracts_df10, by = 'code_tract')
+sp_tracts <- left_join(tracts_2010, tracts_df10, by = 'code_tract')
 
 ggplot() +
-  geom_sf(data = bh_tracts, aes(fill = ifelse(income_pc<10000,income_pc,10000)),
+  geom_sf(data = sp_tracts, aes(fill = ifelse(income_pc<10000,income_pc,10000)),
           color=NA) +
-  geom_sf(data = muni_bh, color='gray10', fill=NA) +
+  geom_sf(data = muni_sp, color='gray10', fill=NA) +
   labs(title = 'Per Capita Income by Census Tract',
-       subtitle= 'Belo Horizonte, 2010') +
-  scale_fill_viridis_c(name = "Income per
-capita (R$ of 2010)",
+       subtitle= 'Sao Paulo, 2010') +
+  scale_fill_viridis_c(name = "Income per capita (R$ of 2010)",
                        na.value="white",
                        option = 'cividis',
                        breaks = c(0,  1e3, 4e3, 8e3, 1e4),
@@ -578,9 +575,12 @@ capita (R$ of 2010)",
 
 ##### 6.4.2. Spatial Distribution of Population in 2022
 
-In this final example using the aggregated data, we use the "Preliminares" results from the 2022 census, which were released by IBGE in March 2024. Specifically, we use variable "V0001", which provides the total population of the tracts. Additionally, since there was a change in the spatial grid of census tracts between 2010 and 2022, we need to download the grid for the corresponding year.
+In this final example using the aggregated data, we use the "Preliminares" results from the 2022 census, which were released by IBGE in March 2024, to analyze the spatial distribution of the population in the municipality of Belo Horizonte. Specifically, we use variable "V0001", which provides the total population of the tracts. Additionally, since there was a change in the spatial grid of census tracts between 2010 and 2022, we need to download the grid for the corresponding year.
 
 ```{r, warning=F, message=FALSE}
+muni_bh <- read_municipality(code_muni = 3106200 ,
+                             year = 2010)
+
 # download preliminary data from the 2022 tracts
 tracts_df22 <- read_tracts(year = 2022,
                           dataset = "Preliminares") |>
@@ -663,4 +663,10 @@ temp_directory <- tempdir()
 set_censobr_cache_dir(path = temp_directory)
 ```
 
-# References
+## 8. Conclusion
+
+The `{censobr}` package offers a comprehensive solution for researchers and practitioners seeking to access and analyze Brazilian population census data efficiently. It allows handling large and complex datasets that exceed available memory resources, enabling users to perform in-disk data manipulation seamlessly, using familiar `{dplyr}` syntax. Through its integration with `{geobr}`, `{censobr}` enriches datasets with geometries and standardized geographic identifiers, making it easy to do spatial analysis. The package also provides easy access to census documentation, including variable dictionaries, questionnaires, and interviewer manuals, thereby enhancing transparency and ease of use.
+
+Our examples aim to demonstrate the versatility of `{censobr}` -- but of course, they are far from exhaustive. By making census data more accessible and manageable, we intend to facilitate more data-driven insights and empowering researchers with limited computing resources to engage with the censuses datasets that were previously difficult to handle. Future developments will focus on expanding the package's functionalities, including support for the latest census edition and further enhancements to documentation and data handling capabilities. 
+
+## References
