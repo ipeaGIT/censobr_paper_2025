@@ -2,3 +2,5 @@ name|type|data|command|depend|seed|path|time|size|bytes|format|repository|iterat
 .Random.seed|object|1c97453ff848901c|||||||||||||||
 rendered_report|stem|3a6a9e9533a2fd69|134f2f30cb2ffb2a|eecac206c11fbdfb|-786482954|E:/Dropbox/Artigos/1 - Em faccao/censobr_paper_2025/paper_pdf/censobr_shortPaper.pdf*E:/Dropbox/Artigos/1 - Em faccao/censobr_paper_2025/paper_pdf/censobr_shortPaper.docx|t20053.4491971348s|c8595ff0049ae2ac|4433532|file|local|vector|||382.37||
 report_file|stem|6200dbf81c31594d|31816d827ca534f8|2c530c1562a7fbd1|97616872|censobr_shortPaper.Rmd|t20053.4403720512s|60ef77b8ce01768e|42632|file|local|vector|||0.01||
+.Random.seed|object|47bcf4152b0780d7
+report_file|stem|ed42cf9ff4395044|31816d827ca534f8|2c530c1562a7fbd1|97616872|censobr_shortPaper.Rmd|t20053.6786623529s|b0af64e58b4967dc|42670|file|local|vector|||0||
