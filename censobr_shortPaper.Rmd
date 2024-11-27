@@ -226,8 +226,7 @@ interview_manual(year = 1960)
 
 ## 5. Handling Larger-Than-Memory Data
 
-### 5.1. In-disk Data wrangling with `{arrow}` and working with databases with `{duckdb}` and `{dbplyr}`
-
+### 5.1. In-disk analysis with `{arrow}`, SQL databases with `{duckdb}` and `{dbplyr}`
 One of the most essential features of `{censobr}` is its capability to handle larger-than-memory datasets. The Brazilian census datasets are often too large to load directly into users' RAM. To address this, `{censobr}` uses files saved in `.parquet` format, and by default, returns an "Arrow table" rather than a conventional `data.frame`. An Arrow table is an object that points to the dataset stored on disk, allowing for basic data manipulation without loading it into memory entirely.
 
 Once the desired data are accessed through any `read_*` function, users can use common `{dplyr}` functions to select columns, filter cases, recode variables, or aggregate observations. Operations on Arrow tables are executed lazily; that is, they are only evaluated when explicitly requested, allowing researchers to delay heavy computations until they are necessary. After processing, smaller, more manageable datasets can be collected for further analysis.
@@ -345,13 +344,13 @@ pyramid_df |>
                    y = age_group,
                    fill = gender)) +
         geom_col() +
-        scale_fill_discrete(name="", type=c("#ffcb69","#437297")) +       
+        scale_fill_discrete(name="", type=c("#437297","#ffcb69")) +       
         scale_x_continuous(labels = function(x){scales::comma(abs(x))},
                            breaks = c(-8000, -4000,0,4000, 8000),
-                           name = "População (em milhares)") +
+                           name = "Population (in thousands)") +
         facet_wrap(~year) +
         theme_classic() +
-        theme(legend.position = "top",
+        theme(legend.position = "bottom",
               axis.title.y = element_blank(),
               panel.grid.major.x = element_line(color = "grey90"), 
               strip.background.x = element_blank()) 
@@ -395,11 +394,13 @@ sanitation_summary |>
   labs(
     title = "Household Access to Sanitation in Brazil by region (2010)",
     x = "Sanitation Access",
-    y = "Number of Households (in thousands)"
+    y = "Proportion of households"
   ) +
+  scale_y_continuous(labels = scales::percent) +
   scale_fill_manual(values = c("#437297", "#ffcb69")) +
   theme_minimal() +
-        theme(legend.position = "bottom")
+        theme(legend.position = "bottom",
+              legend.title = element_blank())
 ```
 
 ### 6.3. Using Complex Sample Design in the 1960 Census
