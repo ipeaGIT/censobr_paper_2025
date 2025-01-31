@@ -18,7 +18,7 @@ Population census data is one of the most important sources of information on th
 
 To address these issues, we developed `{censobr}`, an R package designed to facilitate the efficient access and manipulation of Brazilian census data and documentation, covering all editions of the census since 1960. Because the `{censobr}` package builds on the Apache Arrow platform and preprocessed files saved in `.parquet` format, it enables users to manage larger-than-memory datasets using a columnar memory format that optimizes data access and processing. Arrow seamlessly integrates with `{dplyr}` syntax, allowing users to interact with in-disk datasets using familiar R commands, thus streamlining the analytical workflow without necessitating extensive new learning. `{censobr}` also integrates with `{geobr}` [@pereira2019geobr], an R package to download official geospatial data in Brazil, using matching geographic identifiers that facilitate the merging of census data with spatial geometries for visualization and analysis. Our goal is to make census data more accessible while maintaining the flexibility and power of the R programming language.
 
-This paper introduces the `{censobr}` package, outlines its core functionalities, and provides illustrative examples that demonstrate its applications in social science research.
+This research note introduces the `{censobr}` package, outlines its core functionalities, and provides illustrative examples that demonstrate its applications in social science research. Compared to other computational packages to read and analyze Brazilian census data, such as IPUMS [@ruggles2024ipums] and Base dos Dados [@dahis2022data], the `{censobr}` package provides a simple and user-friendly syntax to access the complete records of all data sets and documentation for several years since 1960, and allows for easy integration with spatial data.
 
 ## 2. An Overview of Brazilian Population Censuses
 
@@ -147,7 +147,9 @@ All datasets available through `{censobr}` are identical to data published by IB
 
 ### 3.1 The 1960 census
 
-The microdata version available in `{censobr}` represents a combination of two distinct datasets drawn from the 1960 population census. The 1960 Census in Brazil marked a significant chapter in the nation's demographic data collection history, characterized by both methodological complexity and subsequent challenges in data processing. Initially, IBGE conducted a comprehensive 25% sample survey alongside the universe census, but technical issues delayed its processing, and several states' data remained incomplete and undigitized. The 25% sample currently available includes only 16 states of the Federation, excluding Maranhão, Piauí, Guanabara, Santa Catarina, Espírito Santo, and the Northern Region. It also contains data from a contested border region between Minas Gerais and Espírito Santo known as Serra dos Aimorés.
+The harmonization of the 1960 Census dataset presented in `{censobr}` stems from prior work by one of the authors, but until now, it had not been made publicly available. Thus, `{censobr}` represents the first time this dataset is accessible to the broader academic community, offering a unique and valuable resource for researchers interested in Brazil’s demographic history. The microdata version we now make available represents a combination of two distinct datasets drawn from the 1960 population census. 
+
+The 1960 Census in Brazil marked a significant chapter in the nation's demographic data collection history, characterized by both methodological complexity and subsequent challenges in data processing. Initially, IBGE conducted a comprehensive 25% sample survey alongside the universe census, but technical issues delayed its processing, and several states' data remained incomplete and undigitized. The 25% sample currently available includes only 16 states of the Federation, excluding Maranhão, Piauí, Guanabara, Santa Catarina, Espírito Santo, and the Northern Region. It also contains data from a contested border region between Minas Gerais and Espírito Santo known as Serra dos Aimorés.
 
 In the midst of the processing delay, in 1965, IBGE also created a probabilistic sub-sample representing approximately 1.27% of the population, covering all units of the Federation. This sub-sample was used to produce several official reports in the 1960s, and it remains an important source of data. Unlike the 25% sample, the 1.27% dataset is comprehensive in terms of geographic coverage, encompassing states not included in the 25% sample (which was never fully processed), albeit excluding rural areas of the state of Rondônia. We combined both the 25% and 1.27% samples to form a more complete dataset, which approximates the original design intended for the 1960 Census. The merging process involved substantial pre-processing to address data inconsistencies, especially since portions of the original 1.27% sample were corrupted, leading to missing or inaccurate information. A detailed explanation of how these data was processed is available at <https://github.com/antrologos/ConsistenciaCenso1960Br>.
 
@@ -247,7 +249,7 @@ rio <- mortality_2010 |>
   filter(V0704 == 'Masculino' & abbrev_state == 'RJ')
 
 # Collect the data, loading it into the memory as a data.frame
-rio_df <- rio |> collect()
+rio_df <- rio |> dplyr::collect()
 ```
 
 Another approach allowed by `{censobr}` is using `{duckdb}`, a library that enables Arrow tables to be queried as if they were part of a database, allowing researchers to use SQL-like syntax for data operations.
@@ -282,8 +284,8 @@ One of the key applications of census data is to analyze demographic trends over
 
 ```{r, warning = F, message=FALSE}
 # Load population data for 1970 and 2010
-pop_1970 <- read_population(year = 1970)
-pop_2010 <- read_population(year = 2010)
+pop_1970 <- censobr::read_population(year = 1970)
+pop_2010 <- censobr::read_population(year = 2010)
 ```
 
 Then we recode the raw data (still as Arrow tables), collect, and count the number of men and women by age to organize the dataset in a suitable format to create the pyramids figure. As these are sample microdata, it is necessary to make use of **sampling weights** (variable V054 in the 1970 Census and V0010 in the 2010 edition). 
@@ -297,7 +299,7 @@ age_dist_1970 <- pop_1970 |>
                year   = 1970) |>
         group_by(age, gender, year) |>
         summarise(count = sum(V054)) |>
-        collect()
+        dplyr::collect()
 
 age_dist_2010 <- pop_2010 |>
         mutate(age    = as.numeric(V6036),
@@ -305,7 +307,7 @@ age_dist_2010 <- pop_2010 |>
                year   = 2010) |>
         group_by(age, gender, year) |>
         summarise(count = sum(V0010)) |>
-        collect()
+        dplyr::collect()
 
 # Gathering, recoding, and aggregating by age groups
 pyramid_df = bind_rows(age_dist_1970,
@@ -407,7 +409,7 @@ sanitation_summary |>
 
 As we explained above, the 1960 Census microdata provided by `{censobr}` is an integration of two distinct datasets: a comprehensive 25% sample survey and a 1.27% probabilistic sub-sample. The dataset provide the variables for incorporating the Complex Sample Design with stratification, clustering, and weighting. Stratification ensures that different population groups are represented with certainty, while clustering addresses the correlation among observations within the same sampling units. Sampling weights, by their turn, corrects for disproportions and incorporates an expansion factor, making the counts sum up to the population totals.
 
-In this section, we illustrate how to use data from the states of Rio de Janeiro and Guanabara (which nowadays is the city of Rio de Janeiro) to construct a survey design object. We estimate the distribution of the population served by different forms of water supply: the official General Network vs. other forms (well, spring, etc.) Then we calculate the confidence intervals. First it is necessary to download and recode the data:
+In this section, we illustrate how to use data from the states of Rio de Janeiro and Guanabara (which nowadays is the city of Rio de Janeiro) to construct an object of the class `survey.design`.  We estimate the distribution of the population served by different forms of water supply: the official General Network vs. other forms (well, spring, etc.) Then we calculate the confidence intervals. First it is necessary to download and recode the data:
 
 ```{r, message=F, warning=FALSE}
 # Load household data for 1960
@@ -439,13 +441,13 @@ Notice that despite having very similar populations, Guanabara and Rio de Janeir
 
 Now let's transform the `census_rj_gb` data.frame into a survey object usign the function `as_survey_design()`, from the `{srvyr}` package. We inform the primary sampling units (PSUs) and secondary sampling units (SSU), strata, and weights. 
 
-```{r, message=FALSE, warning=F, echo = FALSE}
+```{r, message=FALSE, warning=F}
 # Loading the package for handling survey data
 library(srvyr)
 
 options(survey.lonely.psu = "adjust")
 
-# Creating the survey design object (not a data.frame anymore)
+# Creating the object of class survey.design (not a data.frame anymore)
 census_rj_gb_svy <- census_rj_gb |>
   as_survey_design(ids    = c(censobr_upa, censobr_usa),
                    strata = censobr_estrato,
@@ -486,7 +488,7 @@ ggplot(data = water_table,
 
 As previously mentioned, IBGE does not distribute microdata from the universe survey. And as most users are interested in individual- or household-level analysis, the sample microdata often becomes the focus of attention. However, the aggregated data at the census tract level provides very rich data on population and environmental characteristics on a very detailed geographical resolution. 
 
-In its original format, these aggregated data are divided into different and separate datasets, organized by themes and types of variables (e.g., variables related to individuals, households, etc.). In many cases, the same theme is spread across multiple files (sometimes with hundreds of variables). To simplify understanding of these data, `{censobr}` consolidates all files/variables into different tables:
+In its original format, these aggregated data are divided into different and separate datasets, organized by themes and types of variables (e.g., variables related to individuals, households, etc.). In many cases, the same theme is spread across multiple files (sometimes with hundreds of variables). To make it easier to access and use these data, `{censobr}` consolidates all files/variables into different tables:
 
 - "Basico" (Basic Variables)
 - "Entorno" (Household surroundings/neighborhood)
@@ -507,7 +509,6 @@ dom <- read_tracts(year = 2010,
 names(dom)[c(1:12,301:306)]
 ```
 
-This organization of data aggregated by census tracts may seem confusing at first glance—and it is. However, it becomes clearer with some practical examples.
 
 ##### 6.4.1. Spatial Distribution of Income in 2010
 
@@ -572,7 +573,10 @@ ggplot() +
                        breaks = c(0,  1e3, 4e3, 8e3, 1e4),
                        labels  = c('0',  '1,000', '4,000', '8,000', '> 10,000')
                        ) +
-  theme_void()
+  theme(panel.background = element_rect(fill = "white"),
+        axis.text        = element_blank(),
+        axis.ticks       = element_blank())
+
 ```
 
 ##### 6.4.2. Spatial Distribution of Population in 2022
@@ -625,7 +629,10 @@ ggplot() +
                        name='Population per'~Km^2,
                        breaks = c(0,  5e3, 10e3, 15e3, 2e4),
                        labels  = c('0',  '5,000', '10,000', '15,000', '> 20,000')) +
-  theme_void()
+  theme(panel.background = element_rect(fill = "white"),
+        axis.text        = element_blank(),
+        axis.ticks       = element_blank())
+
 ```
 
 ## 7. Managing {censobr} files cached locally
@@ -669,6 +676,6 @@ set_censobr_cache_dir(path = temp_directory)
 
 The `{censobr}` package offers a simple and efficient way for researchers and practitioners to access and analyze Brazilian population census data. It allows handling large and complex datasets that exceed available memory resources, enabling users to perform in-disk data manipulation seamlessly, using familiar `{dplyr}` syntax. Through its integration with `{geobr}`, `{censobr}` enriches datasets with geometries and standardized geographic identifiers, making it easy to do spatial analysis. The package also provides easy access to census documentation, including variable dictionaries, questionnaires, and interviewer manuals, thereby enhancing transparency and ease of use.
 
-The examples included in this paper illustrate the versatility of `{censobr}` -- but of course, they are far from exhaustive. By making census data more accessible and manageable, we intend to facilitate more data-driven insights and empowering researchers with limited computing resources to engage with the census datasets that were previously difficult to handle. Future developments will focus on expanding the package's functionalities, including support for the latest census edition and further enhancements to documentation and data handling capabilities. 
+The examples included in this research note illustrate the versatility of `{censobr}` -- but of course, they are far from exhaustive. By making census data more accessible and manageable, we intend to facilitate more data-driven insights and empowering researchers with limited computing resources to engage with the census datasets that were previously difficult to handle. Future developments will focus on expanding the package's functionalities, including support for the latest census edition and further enhancements to documentation and data handling capabilities. 
 
 ## References
