@@ -18,7 +18,9 @@ Population census data is one of the most important sources of information on th
 
 To address these issues, we developed `{censobr}`, an R package designed to facilitate the efficient access and manipulation of Brazilian census data and documentation, covering all editions of the census since 1960. Because the `{censobr}` package builds on the Apache Arrow platform and preprocessed files saved in `.parquet` format, it enables users to manage larger-than-memory datasets using a columnar memory format that optimizes data access and processing. Arrow seamlessly integrates with `{dplyr}` syntax, allowing users to interact with in-disk datasets using familiar R commands, thus streamlining the analytical workflow without necessitating extensive new learning. `{censobr}` also integrates with `{geobr}` [@pereira2019geobr], an R package to download official geospatial data in Brazil, using matching geographic identifiers that facilitate the merging of census data with spatial geometries for visualization and analysis. Our goal is to make census data more accessible while maintaining the flexibility and power of the R programming language.
 
-This research note introduces the `{censobr}` package, outlines its core functionalities, and provides illustrative examples that demonstrate its applications in social science research. Compared to other computational packages to read and analyze Brazilian census data, such as IPUMS [@ruggles2024ipums] and Base dos Dados [@dahis2022data], the `{censobr}` package provides a simple and user-friendly syntax to access the complete records of all data sets and documentation for several years since 1960, and allows for easy integration with spatial data.
+This research note introduces the `{censobr}` package, outlines its core functionalities, and provides illustrative examples that demonstrate its applications in social science research. Compared to other computational packages to read and analyze Brazilian census data, such as IPUMS [@ruggles2024ipums] and Base dos Dados [@dahis2022data], the `{censobr}` package provides a simple and user-friendly syntax to access the complete records of all data sets and documentation for several years since 1960 and allows for easy integration with spatial data.
+
+There are packages with the same purpose of reading census data from some other countries. This is the case for packages such as `{tidycensus}` for the United States [@walker2025tidycensus] and `{cancensus}` for Canada [@vonBergmann2021cancensus]. These packages, however, are designed to access census data provided directly by official agencies through APIs. In contexts where data is not made available via official APIs from the data-producing agencies and where datasets are very large, as is the case in Brazil, the architecture used in organizing the {censobr} package can serve as a promising framework for handling census and as well as other large datasets in other countries.
 
 ## 2. An Overview of Brazilian Population Censuses
 
@@ -26,7 +28,7 @@ The first census of Brazil was conducted in 1872, during Brazil's imperial perio
 
 Since 1960, each Brazilian census is divided into two main components: the **universe survey** and the **sample survey** (similar to what was commonly done in the United States and the United Kingdom, and is still in use in Canada). The universal survey is administered to all households and collects essential demographic and housing information through a short questionnaire containing between 9 and 30 questions, depending on the census edition. In contrast, the sample survey targets a representative subset of the population and uses a longer questionnaire that includes all questions from the universe components as well as dozens of more detailed questions on topics such as migration, religion, education, fertility, income, and employment. The sample size was 25% in the 1960, 1970, and 1980 censuses, and it was reduced to 10% from 1991 onwards [@ibge2013metodologia].
 
-Brazilian population census data is published in two main formats: aggregated data at the census tract level, and microdata at the person or household level. **Aggregated data** from the universe survey (short questionnaire) provide summary statistics (counts, proportions, and means) computed at the census tract level. This dataset can be used for example for spatial analysis to examine spatial patterns, disparities and trends of various characteristics of the population [e.g. @brueckner2019slums; @goto2022spatial]. **Census tracts** are the smallest geographic unit in the Brazilian censuses. They are contiguous areas typically containing approximately 200 households, designed to facilitate efficient enumeration and data collection. Over time, the number of census tracts has expanded in response to population growth and changes in settlement patterns, with approximately 216,000 census tracts in 2000, 314,000 in 2010, and 452,000 in 2022. These tracts form the fundamental spatial units for census data collection, reflecting the evolution of Brazilian urban and rural landscapes. Individual-level data from the universe survey is not publicly available due to privacy concerns.
+Brazilian population census data is published in two main formats: aggregated data at the census tract level, and microdata at the person or household level. The data from the universe survey (short questionnaire) is only available in **aggregated format**, providing summary statistics (counts, proportions, and means) computed at the census tract level. This dataset can be used for example for spatial analysis to examine spatial patterns, disparities and trends of various characteristics of the population [e.g. @brueckner2019slums; @goto2022spatial]. Census tracts are the smallest geographic unit in the Brazilian censuses. They are contiguous areas typically containing approximately 200 households, designed to facilitate efficient enumeration and data collection. Over time, the number of census tracts has expanded in response to population growth and changes in settlement patterns, with approximately 216,000 census tracts in 2000, 314,000 in 2010, and 452,000 in 2022. These tracts form the fundamental spatial units for census data collection, reflecting the evolution of Brazilian urban and rural landscapes.
 
 Meanwhile, the **microdata** from the sample survey (long questionnaire) consist of a dataset in which each row represents an instance of data collection. In IBGE surveys and censuses, "persons" and "households" are tipically the units of analysis of microdata. "Persons" refer to individual members of the population, and their data typically includes personal characteristics such as age, gender, education, etc. "Households" represent residential units, which consist of one or more persons living together, sharing living expenses, and typically occupying a single housing unit. Household-level microdata include variables related to housing conditions, access to services (such as water and sanitation) and household composition (such as the number of residents and their relationships). Because the sample survey is more sparse geographically, it does not allow for fine-grained spatial analyses. The smallest geographic units available in the microdata are **weighting areas** (áreas de ponderação), which are groups of contiguous census tracts ensuring statistical representativeness. For the 2010 Census, IBGE established that a weighting area should have at least 400 occupied households in the sample. In less densely populated regions, these areas cover a large territorial extension.
 
@@ -34,7 +36,9 @@ In summary, there is a trade-off of spatial granularity and richness of informat
 
 The Figure 1 below illustrates the  hierarchical spatial organization of Brazilian Census data, ranging from municipality-level aggregation to census tract and weighting area levels. Census tracts, the smallest geographic unit, are used to collect comprehensive demographic data and offer a high-resolution snapshot of local characteristics. In contrast, weighting areas combine contiguous census tracts to ensure statistical representativeness while allowing for more detailed analyses of microdata variables.
 
-```{r, warning=F, message=F, echo=FALSE}
+Figure 1. Hierarchical spatial organization of Brazilian Census data.
+
+```{r, warning=F, message=F, echo=FALSE, dpi=300}
 library(geobr)
 library(ggplot2)
 library(dplyr)
@@ -91,12 +95,34 @@ temp1  <- ggplot() +
            hjust = 0, color=clr, size=sz) +
   coord_sf(xlim = c(-116.305, -115.98)) +
   theme_void() +
-  theme(plot.background = element_rect(fill = 'white', color='white')) +
-  labs(title = 'Figure 1. Hierarchical spatial organization of Brazilian Census data.')
+  theme(plot.background = element_rect(fill = 'white', color='white'))
 
 temp1
 ```
+```{r, warning=F, message=F, echo=FALSE, include=FALSE, dpi=300}
+# MAP
+ggplot() +
+  # municipio
+  geom_sf(data = rotate_data_geom(data = muni, y_add = .01),
+          color='gray30', fill='#FCDE70', show.legend = FALSE) +
+  annotate("text", label='Município', x=x, y=-4.59,
+           hjust = 0, color=clr, size=sz) +
+  
+  # areas de ponderacao
+  geom_sf(data = rotate_data_geom(data = ap, y_add = .07), 
+          fill='#ff7b7b', color='#ff0000', show.legend = FALSE) +
+  annotate("text", label='Áreas de\nPonderação', x=x, y= -4.53,
+           hjust = 0, color=clr, size=sz) +
 
+  # setores censitarios
+  geom_sf(data = rotate_data_geom(data = ct, y_add = 0.13),
+          color='gray30', fill='gray98', show.legend = FALSE) +
+  annotate("text", label='Setores\ncensitários', x=x, y= -4.47, 
+           hjust = 0, color=clr, size=sz) +
+  coord_sf(xlim = c(-116.305, -115.98)) +
+  theme_void() +
+  theme(plot.background = element_rect(fill = 'white', color='white'))
+```
 
 ## 3. Installation and Core Data Functions
 
@@ -147,7 +173,7 @@ All datasets available through `{censobr}` are identical to data published by IB
 
 ### 3.1 The 1960 census
 
-The harmonization of the 1960 Census dataset presented in `{censobr}` stems from prior work by one of the authors, but until now, it had not been made publicly available. Thus, `{censobr}` represents the first time this dataset is accessible to the broader academic community, offering a unique and valuable resource for researchers interested in Brazil’s demographic history. The microdata version we now make available represents a combination of two distinct datasets drawn from the 1960 population census. 
+The harmonization of the 1960 Census dataset presented in `{censobr}` builds upon previous work by one of the authors, which, until now, had not been publicly available. `{censobr}` thus marks the first time this dataset is accessible to the broader academic community, providing a unique and valuable resource for researchers studying Brazil’s demographic history. The microdata version we now make available represents a combination of two distinct datasets drawn from the 1960 population census. 
 
 The 1960 Census in Brazil marked a significant chapter in the nation's demographic data collection history, characterized by both methodological complexity and subsequent challenges in data processing. Initially, IBGE conducted a comprehensive 25% sample survey alongside the universe census, but technical issues delayed its processing, and several states' data remained incomplete and undigitized. The 25% sample currently available includes only 16 states of the Federation, excluding Maranhão, Piauí, Guanabara, Santa Catarina, Espírito Santo, and the Northern Region. It also contains data from a contested border region between Minas Gerais and Espírito Santo known as Serra dos Aimorés.
 
@@ -337,7 +363,7 @@ pyramid_df = bind_rows(age_dist_1970,
 
 Using `{ggplot2}` we can plot the age pyramid for the two census years:
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, dpi=300}
 library(ggplot2)
 
 # Plotting the figure
@@ -350,6 +376,29 @@ pyramid_df |>
         scale_x_continuous(labels = function(x){scales::comma(abs(x))},
                            breaks = c(-8000, -4000,0,4000, 8000),
                            name = "Population (in thousands)") +
+        facet_wrap(~year) +
+        theme_classic() +
+        theme(legend.position = "bottom",
+              axis.title.y = element_blank(),
+              panel.grid.major.x = element_line(color = "grey90"), 
+              strip.background.x = element_blank()) 
+```
+
+
+
+```{r, message=FALSE, warning=FALSE, include=FALSE, dpi=300}
+library(ggplot2)
+
+# Plotting the figure
+pyramid_df |>
+        ggplot(aes(x = n / 1000,
+                   y = age_group,
+                   fill = gender)) +
+        geom_col() +
+        scale_fill_discrete(name="", type=c("#437297","#ffcb69")) +       
+        scale_x_continuous(labels = function(x){scales::comma(abs(x))},
+                           breaks = c(-8000, -4000,0,4000, 8000),
+                           name = "População (em milhares)") +
         facet_wrap(~year) +
         theme_classic() +
         theme(legend.position = "bottom",
@@ -379,7 +428,7 @@ sanitation_summary <- households_2010 |>
         summarise(count = sum(V0010)) |> # weighted count
         group_by(region) |>
         mutate(percentage = count/sum(count)) |>
-        collect() |>
+        dplyr::collect() |>
         mutate(region = factor(region,
                                levels = 1:5,
                                labels = c("North", "Northest", "Southest", "Center-West", "South"),
@@ -388,15 +437,32 @@ sanitation_summary <- households_2010 |>
 
 Using this summary table, we can visualize disparities in sanitation access by region:
 
-```{r, message=FALSE, warning=FALSE}
+Figure. Household Access to Sanitation in Brazil by region, 2010.
+
+```{r, message=FALSE, warning=FALSE, dpi=300}
 # Plotting sanitation access by region
 sanitation_summary |>
   ggplot(aes(x = region, y = percentage, fill = sanitation_access)) +
   geom_col() +
   labs(
-    title = "Household Access to Sanitation in Brazil by region (2010)",
     x = "Sanitation Access",
     y = "Proportion of households"
+  ) +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_manual(values = c("#437297", "#ffcb69")) +
+  theme_minimal() +
+        theme(legend.position = "bottom",
+              legend.title = element_blank())
+```
+
+```{r, message=FALSE, warning=FALSE, include=FALSE, dpi=300}
+# Plotting sanitation access by region
+sanitation_summary |>
+  ggplot(aes(x = region, y = percentage, fill = sanitation_access)) +
+  geom_col() +
+  labs(
+    x = "Condição de saneamento",
+    y = "Proporção de domicílios"
   ) +
   scale_y_continuous(labels = scales::percent) +
   scale_fill_manual(values = c("#437297", "#ffcb69")) +
@@ -422,7 +488,7 @@ census_rj_gb = census_1960 |>
                censobr_source) |>
         filter(uf %in% c(52, 54),
                !is.na(Water)) |>
-        collect() |>
+        dplyr::collect() |>
         mutate(uf    = ifelse(uf == 52, "Rio de Janeiro", "Guanabara"),
                Water = ifelse(Water %in% c(0, 9), 1, 0),
                Water = factor(Water, 
@@ -457,7 +523,9 @@ census_rj_gb_svy <- census_rj_gb |>
 
 By using a simple dplyr-like syntax, we can produce a contingency table with the correct confidence intervals. 
 
-```{r, warning=F, message=FALSE}
+Figure. Population by forms of Water Supply Guababana (Rio de Janeiro City) and Rio de Janeiro State, 1960.
+
+```{r, warning=F, message=FALSE, dpi=300}
 # Using dplyr-like syntax to manipulate the survey object
 water_table <- census_rj_gb_svy |>
         mutate(one = 1) |>
@@ -475,11 +543,23 @@ ggplot(data = water_table,
   geom_bar(stat = "identity", position = "dodge") +
   geom_errorbar(position = position_dodge(width = 0.9), width = 0.1) +
   scale_fill_manual(values = c("#437297", "#ffcb69")) +
-  labs(
-          title = "Population by forms of Water Supply (1960)",
-          subtitle = "Guababana (Rio de Janeiro City) and Rio de Janeiro State",
-          x = "Areas",
-          y = "Proportion") +
+  labs( x = "Areas", y = "Proportion") +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+```
+
+```{r, warning=F, message=FALSE, include=FALSE, dpi=300}
+# Plotting the results
+ggplot(data = water_table,
+       aes(x = uf, 
+           y = pct, 
+           fill = Water,
+           ymax = pct_upp, 
+           ymin = pct_low)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  geom_errorbar(position = position_dodge(width = 0.9), width = 0.1) +
+  scale_fill_manual(values = c("#437297", "#ffcb69")) +
+  labs( x = "Áreas", y = "Proporção") +
   theme_minimal() +
   theme(legend.position = "bottom")
 ```
@@ -534,7 +614,7 @@ tracts_df10 <- left_join(tract_basico, tract_income)
 # calculate per capita income
 tracts_df10 <- tracts_df10 |>
                 mutate(income_pc = V003 / V002) |>
-                collect()
+                dplyr::collect()
 ```
 
 The next step is to download the geometries of census tracts for 2010 using the `read_census_tract()` function from the `{geobr}` package. Here, we pass the parameter `code_tract = "SP"` to download all tracts in the state of Sao Paulo and then filter only for its capital, the municipality of Sao Paulo.
@@ -558,16 +638,35 @@ tracts_2010 <- filter(tracts_2010, code_muni == 3550308)
 
 Finally, we can merge the spatial data with the income data of the census tracts using the key variable `code_tract` and create a map of the spatial distribution of per capita income in the municipality.
 
-```{r, warning=F, message=FALSE}
+Figure. Per Capita Income by Census Tract. Sao Paulo, 2010.
+
+```{r, warning=F, message=FALSE, dpi=300}
 sp_tracts <- left_join(tracts_2010, tracts_df10, by = 'code_tract')
 
 ggplot() +
   geom_sf(data = sp_tracts, aes(fill = ifelse(income_pc<10000,income_pc,10000)),
           color=NA) +
   geom_sf(data = muni_sp, color='gray10', fill=NA) +
-  labs(title = 'Per Capita Income by Census Tract',
-       subtitle= 'Sao Paulo, 2010') +
   scale_fill_viridis_c(name = "Income per capita (R$ of 2010)",
+                       na.value="white",
+                       option = 'cividis',
+                       breaks = c(0,  1e3, 4e3, 8e3, 1e4),
+                       labels  = c('0',  '1,000', '4,000', '8,000', '> 10,000')
+                       ) +
+  theme(panel.background = element_rect(fill = "white"),
+        axis.text        = element_blank(),
+        axis.ticks       = element_blank())
+
+```
+
+
+```{r, warning=F, message=FALSE, include=FALSE, dpi=300}
+
+ggplot() +
+  geom_sf(data = sp_tracts, aes(fill = ifelse(income_pc<10000,income_pc,10000)),
+          color=NA) +
+  geom_sf(data = muni_sp, color='gray10', fill=NA) +
+  scale_fill_viridis_c(name = "Renda per capita (R$ de 2010)",
                        na.value="white",
                        option = 'cividis',
                        breaks = c(0,  1e3, 4e3, 8e3, 1e4),
@@ -591,7 +690,7 @@ muni_bh <- read_municipality(code_muni = 3106200 ,
 tracts_df22 <- read_tracts(year = 2022,
                           dataset = "Preliminares") |>
                filter(name_muni == 'Belo Horizonte') |>
-               collect()
+               dplyr::collect()
 
 # download all tracts in Minas Gerais
 tracts_2022 <- geobr::read_census_tract(code_tract = "MG",
@@ -604,7 +703,9 @@ tracts_2022 <- filter(tracts_2022, name_muni == 'Belo Horizonte')
 
 Now we can merge the population table with the spatial data, calculate the area of the tracts in square kilometers, and compute the population density of each tract to create the map.
 
-```{r, warning=F, message=FALSE}
+Figure. Population Density by Census Tract. Belo Horizonte, 2022.
+
+```{r, warning=F, message=FALSE, dpi=300}
 # merge tables
 tracts_df22$code_tract <- as.numeric(tracts_df22$code_tract)
 bh_tracts22 <- left_join(tracts_2022, tracts_df22, by = 'code_tract')
@@ -623,12 +724,28 @@ ggplot() +
   geom_sf(data = bh_tracts22, color=NA,
           aes(fill = ifelse(pop_km2<20000,pop_km2,20000))) +
   geom_sf(data = muni_bh, color='gray10', fill=NA) +
-  labs(title = 'Population Density by Census Tract',
-       subtitle= 'Belo Horizonte, 2022') +
   scale_fill_distiller(palette = "Reds", direction = 1,
                        name='Population per'~Km^2,
                        breaks = c(0,  5e3, 10e3, 15e3, 2e4),
                        labels  = c('0',  '5,000', '10,000', '15,000', '> 20,000')) +
+  theme(panel.background = element_rect(fill = "white"),
+        axis.text        = element_blank(),
+        axis.ticks       = element_blank())
+
+```
+
+
+```{r, warning=F, message=FALSE, include=FALSE, dpi=300}
+
+# map
+ggplot() +
+  geom_sf(data = bh_tracts22, color=NA,
+          aes(fill = ifelse(pop_km2<20000,pop_km2,20000))) +
+  geom_sf(data = muni_bh, color='gray10', fill=NA) +
+  scale_fill_distiller(palette = "Reds", direction = 1,
+                       name='População por'~Km^2,
+                       breaks = c(0,  5e3, 10e3, 15e3, 2e4),
+                       labels  = c('0',  '5.000', '10.000', '15.000', '> 20.000')) +
   theme(panel.background = element_rect(fill = "white"),
         axis.text        = element_blank(),
         axis.ticks       = element_blank())
