@@ -100,8 +100,12 @@ temp1  <- ggplot() +
 temp1
 ```
 ```{r, warning=F, message=F, echo=FALSE, include=FALSE, dpi=300}
+
+ggsave(temp1, filename= './figures/fig_1_en.png', 
+       dpi = 300, height = 8, width = 12, units='cm')
+
 # MAP
-ggplot() +
+temp2 <- ggplot() +
   # municipio
   geom_sf(data = rotate_data_geom(data = muni, y_add = .01),
           color='gray30', fill='#FCDE70', show.legend = FALSE) +
@@ -122,6 +126,10 @@ ggplot() +
   coord_sf(xlim = c(-116.305, -115.98)) +
   theme_void() +
   theme(plot.background = element_rect(fill = 'white', color='white'))
+
+ggsave(temp2, filename= './figures/fig_1_pt.png', 
+       dpi = 300, height = 8, width = 12, units='cm')
+
 ```
 
 ## 3. Installation and Core Data Functions
@@ -387,7 +395,8 @@ pyramid_df |>
 
 
 ```{r, message=FALSE, warning=FALSE, include=FALSE, dpi=300}
-library(ggplot2)
+ggsave(filename= './figures/fig_2_en.png', 
+       dpi = 300, height = 12, width = 15, units='cm')
 
 # Plotting the figure
 pyramid_df |>
@@ -405,6 +414,9 @@ pyramid_df |>
               axis.title.y = element_blank(),
               panel.grid.major.x = element_line(color = "grey90"), 
               strip.background.x = element_blank()) 
+
+ggsave(filename= './figures/fig_2_pt.png', 
+       dpi = 300, height = 12, width = 15, units='cm')
 ```
 
 ### 6.2. Household Data: Sanitation Conditions
@@ -431,7 +443,7 @@ sanitation_summary <- households_2010 |>
         dplyr::collect() |>
         mutate(region = factor(region,
                                levels = 1:5,
-                               labels = c("North", "Northest", "Southest", "Center-West", "South"),
+                               labels = c("North", "Northeast", "Southeast", "Center-West", "South"),
                                ordered = T))
 ```
 
@@ -456,8 +468,20 @@ sanitation_summary |>
 ```
 
 ```{r, message=FALSE, warning=FALSE, include=FALSE, dpi=300}
+ggsave(filename= './figures/fig_3_en.png', 
+       dpi = 300, height = 12, width = 15, units='cm')
+
 # Plotting sanitation access by region
 sanitation_summary |>
+  mutate(region = case_when(region == 'North' ~ 'Norte',
+                            region == 'Northeast' ~ 'Nordeste',
+                            region == 'Southeast' ~ 'Sudeste',
+                            region == 'South' ~ 'Sul',
+                            region == 'Center-West' ~ 'Centro-Oeste'
+                            ),
+         sanitation_access = case_when(sanitation_access=='Adequate Sanitation'~'Acesso Adequado',
+                                       sanitation_access=='Inadequate Sanitation'~'Acesso Inadequado')
+         ) |>
   ggplot(aes(x = region, y = percentage, fill = sanitation_access)) +
   geom_col() +
   labs(
@@ -469,6 +493,9 @@ sanitation_summary |>
   theme_minimal() +
         theme(legend.position = "bottom",
               legend.title = element_blank())
+
+ggsave(filename= './figures/fig_3_pt.png', 
+       dpi = 300, height = 12, width = 15, units='cm')
 ```
 
 ### 6.3. Using Complex Sample Design in the 1960 Census
@@ -542,6 +569,7 @@ ggplot(data = water_table,
            ymin = pct_low)) +
   geom_bar(stat = "identity", position = "dodge") +
   geom_errorbar(position = position_dodge(width = 0.9), width = 0.1) +
+  scale_y_continuous(labels = scales::percent) +
   scale_fill_manual(values = c("#437297", "#ffcb69")) +
   labs( x = "Areas", y = "Proportion") +
   theme_minimal() +
@@ -549,19 +577,33 @@ ggplot(data = water_table,
 ```
 
 ```{r, warning=F, message=FALSE, include=FALSE, dpi=300}
+ggsave(filename= './figures/fig_4_en.png', 
+       dpi = 300, height = 12, width = 15, units='cm')
+
+
 # Plotting the results
-ggplot(data = water_table,
-       aes(x = uf, 
+water_table |>
+  mutate(
+    Water = case_when(
+      Water=='Other Forms'~'Outras formas',
+      Water=='General Public Network'~'Rede Pública Geral')
+          ) |>
+ggplot(aes(x = uf, 
            y = pct, 
            fill = Water,
            ymax = pct_upp, 
            ymin = pct_low)) +
   geom_bar(stat = "identity", position = "dodge") +
   geom_errorbar(position = position_dodge(width = 0.9), width = 0.1) +
+  scale_y_continuous(labels = scales::percent) +
   scale_fill_manual(values = c("#437297", "#ffcb69")) +
-  labs( x = "Áreas", y = "Proporção") +
+  labs( x = "Unidade da Federação", y = "Proporção", fill="Conexão de água") +
   theme_minimal() +
   theme(legend.position = "bottom")
+
+ggsave(filename= './figures/fig_4_pt.png', 
+       dpi = 300, height = 12, width = 15, units='cm')
+
 ```
 
 ### 6.4. Working with Census Tracts
@@ -661,6 +703,8 @@ ggplot() +
 
 
 ```{r, warning=F, message=FALSE, include=FALSE, dpi=300}
+ggsave(filename= './figures/fig_5_en.png', 
+       dpi = 300, height = 12, width = 15, units='cm')
 
 ggplot() +
   geom_sf(data = sp_tracts, aes(fill = ifelse(income_pc<10000,income_pc,10000)),
@@ -675,6 +719,9 @@ ggplot() +
   theme(panel.background = element_rect(fill = "white"),
         axis.text        = element_blank(),
         axis.ticks       = element_blank())
+
+ggsave(filename= './figures/fig_5_pt.png', 
+       dpi = 300, height = 12, width = 15, units='cm')
 
 ```
 
@@ -736,6 +783,8 @@ ggplot() +
 
 
 ```{r, warning=F, message=FALSE, include=FALSE, dpi=300}
+ggsave(filename= './figures/fig_6_en.png', 
+       dpi = 300, height = 12, width = 15, units='cm')
 
 # map
 ggplot() +
@@ -750,6 +799,8 @@ ggplot() +
         axis.text        = element_blank(),
         axis.ticks       = element_blank())
 
+ggsave(filename= './figures/fig_6_pt.png', 
+       dpi = 300, height = 12, width = 15, units='cm')
 ```
 
 ## 7. Managing {censobr} files cached locally
