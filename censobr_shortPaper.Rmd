@@ -396,10 +396,11 @@ pyramid_df |>
 
 ```{r, message=FALSE, warning=FALSE, include=FALSE, dpi=300}
 ggsave(filename= './figures/fig_2_en.png', 
-       dpi = 300, height = 12, width = 15, units='cm')
+       dpi = 300, height = 12, width = 16, units='cm')
 
 # Plotting the figure
 pyramid_df |>
+          mutate(gender = ifelse(gender=="Men", "Homens", "Mulheres")) |>
         ggplot(aes(x = n / 1000,
                    y = age_group,
                    fill = gender)) +
@@ -416,7 +417,7 @@ pyramid_df |>
               strip.background.x = element_blank()) 
 
 ggsave(filename= './figures/fig_2_pt.png', 
-       dpi = 300, height = 12, width = 15, units='cm')
+       dpi = 300, height = 12, width = 16, units='cm')
 ```
 
 ### 6.2. Household Data: Sanitation Conditions
