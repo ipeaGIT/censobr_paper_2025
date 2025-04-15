@@ -572,7 +572,7 @@ ggplot(data = water_table,
   geom_errorbar(position = position_dodge(width = 0.9), width = 0.1) +
   scale_y_continuous(labels = scales::percent) +
   scale_fill_manual(values = c("#437297", "#ffcb69")) +
-  labs( x = "Areas", y = "Proportion") +
+  labs( x = "Areas", y = "Proportion", fill="Water supply") +
   theme_minimal() +
   theme(legend.position = "bottom")
 ```
